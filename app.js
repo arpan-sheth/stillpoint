@@ -8,7 +8,7 @@
     settings: {
       name: "", focus: 25, short: 5, long: 15, interval: 4,
       autoBreak: false, autoFocus: false, chime: true, notify: false,
-      clock24: false, quotes: true,
+      clock24: false, quotes: true, affirm: true, theme: "auto",
     },
     tasks: [],
     selectedTask: null,
@@ -16,7 +16,7 @@
     goals: {},
     notes: {},
     history: {},
-    scene: "dusk",
+    scene: "aura-pink",
     customBg: "",
     sounds: {},
   });
@@ -105,34 +105,60 @@
   }
 
   // ---------- Backgrounds ----------
-  const SCENES = {
-    dusk: ["Dusk", "linear-gradient(160deg,#2b1e3f 0%,#6b3f6b 45%,#e08a5f 100%)"],
-    ocean: ["Ocean", "linear-gradient(160deg,#0f2027 0%,#203a43 50%,#2c5364 100%)"],
-    forest: ["Forest", "linear-gradient(160deg,#0b1f17 0%,#1f4d3a 55%,#6b8f5e 100%)"],
-    aurora: ["Aurora", "radial-gradient(ellipse at 20% 20%,#3dd6b0 0%,transparent 45%),radial-gradient(ellipse at 80% 30%,#7b5cff 0%,transparent 50%),linear-gradient(180deg,#081325,#0d1b33)"],
-    sand: ["Desert", "linear-gradient(160deg,#4a2c2a 0%,#b5654a 50%,#f0c27b 100%)"],
-    night: ["Midnight", "radial-gradient(circle at 70% 20%,#2a3a6b 0%,transparent 40%),linear-gradient(180deg,#05070f,#141a2e)"],
-    blossom: ["Blossom", "linear-gradient(160deg,#5b3a5e 0%,#c97b9b 55%,#f6d3c8 100%)"],
-    slate: ["Slate", "linear-gradient(160deg,#1f2229 0%,#2f343f 100%)"],
-    lagoon: ["Lagoon", "linear-gradient(160deg,#134e5e 0%,#3a9e8f 55%,#c4e4a6 100%)"],
-  };
+  let sceneGroup = null;
+  function applyTheme(light) {
+    const mode = S.settings.theme || "auto";
+    const isLight = mode === "light" || (mode === "auto" && light);
+    document.body.classList.toggle("light-ui", isLight);
+    document.querySelector('meta[name="theme-color"]').content = isLight ? "#f6eef2" : "#1b1f2a";
+  }
   function applyBg() {
     const bg = $("#bg");
     if (S.scene === "custom" && S.customBg) {
+      Scenes.stop(); bg.innerHTML = ""; bg.classList.remove("grainy");
       bg.style.background = `#111 url("${S.customBg.replace(/"/g, "%22")}") center/cover no-repeat`;
+      applyTheme(false);
     } else {
-      bg.style.background = (SCENES[S.scene] || SCENES.dusk)[1];
+      const sc = Scenes.render(bg, S.scene);
+      applyTheme(!!sc.light);
     }
+    renderAffirmation();
   }
   function renderScenes() {
-    $("#sceneList").innerHTML = Object.entries(SCENES).map(([k, [n, css]]) =>
-      `<div class="scene ${S.scene === k ? "active" : ""}" data-scene="${k}" style="background:${css}"><span>${n}</span></div>`).join("");
+    const cur = Scenes.byId[S.scene];
+    sceneGroup ||= cur ? cur.group : "Aura";
+    $("#sceneTabs").innerHTML = Scenes.groups.map((g) =>
+      `<button class="mode ${g === sceneGroup ? "active" : ""}" data-sgroup="${g}">${g}</button>`).join("");
+    const items = Scenes.list.filter((x) => x.group === sceneGroup);
+    $("#sceneList").innerHTML = items.map((x) =>
+      `<div class="scene ${S.scene === x.id ? "active" : ""}" data-scene="${x.id}" title="${esc(x.name)}"><div class="scene-art"></div><span class="${x.light ? "dark" : ""}">${esc(x.name)}${x.anim ? " ✦" : ""}</span></div>`).join("");
+    $$("#sceneList .scene").forEach((el) => Scenes.render(el.querySelector(".scene-art"), el.dataset.scene, { thumb: true }));
     $("#customBg").value = S.customBg && !S.customBg.startsWith("data:") ? S.customBg : "";
   }
+  $("#sceneTabs").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sgroup]"); if (!b) return;
+    sceneGroup = b.dataset.sgroup; renderScenes();
+  });
   $("#sceneList").addEventListener("click", (e) => {
     const el = e.target.closest(".scene"); if (!el) return;
-    S.scene = el.dataset.scene; save(); applyBg(); renderScenes();
+    S.scene = el.dataset.scene; save(); applyBg();
+    $$("#sceneList .scene").forEach((x) => x.classList.toggle("active", x === el));
   });
+
+  // ---------- Affirmations ----------
+  const AFFIRM = [
+    "you're doing better than you think.", "one small step is still a step.", "be gentle with yourself today.",
+    "your pace is the right pace.", "show up for future you.", "softly, steadily, surely.",
+    "you are allowed to rest.", "focus on what you can control.", "little by little, a lot.",
+    "today is a fresh page.", "progress, not perfection.", "you've got this.", "breathe in, begin again.",
+    "make it a calm kind of productive.",
+  ];
+  function renderAffirmation() {
+    const el = $("#affirmation");
+    if (!S.settings.affirm) { el.classList.add("hidden"); return; }
+    el.textContent = AFFIRM[Math.floor(Date.now() / 864e5) % AFFIRM.length];
+    el.classList.remove("hidden");
+  }
   $("#customBg").addEventListener("change", (e) => {
     const v = e.target.value.trim(); if (!v) return;
     S.customBg = v; S.scene = "custom"; save(); applyBg(); renderScenes();
@@ -181,7 +207,7 @@
   const settingMap = {
     setName: ["name", "text"], setFocus: ["focus", "num"], setShort: ["short", "num"], setLong: ["long", "num"],
     setInterval: ["interval", "num"], setAutoBreak: ["autoBreak", "bool"], setAutoFocus: ["autoFocus", "bool"],
-    setChime: ["chime", "bool"], setNotify: ["notify", "bool"], setClock24: ["clock24", "bool"], setQuotes: ["quotes", "bool"],
+    setChime: ["chime", "bool"], setNotify: ["notify", "bool"], setClock24: ["clock24", "bool"], setQuotes: ["quotes", "bool"], setAffirm: ["affirm", "bool"], setTheme: ["theme", "text"],
   };
   function loadSettingsUI() {
     for (const [id, [k, t]] of Object.entries(settingMap)) {
@@ -197,7 +223,7 @@
         Notification.requestPermission().then((p) => { if (p !== "granted") { S.settings.notify = false; save(); loadSettingsUI(); } });
       }
       if (["focus", "short", "long"].includes(k) && !timer.running) resetTimer();
-      tickClock(); renderQuote(); renderToday();
+      tickClock(); renderQuote(); renderToday(); if (k === "theme" || k === "affirm") applyBg();
       if ($("#view-planner").classList.contains("active")) renderPlanner();
     });
   }

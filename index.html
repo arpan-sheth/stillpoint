@@ -35,6 +35,7 @@
       <div class="greeting" id="greeting">Hello</div>
       <div class="clock" id="clock">00:00</div>
       <div class="date" id="dateLine"></div>
+      <div class="affirmation hidden" id="affirmation"></div>
     </section>
 
     <section class="focus-grid">
@@ -144,6 +145,7 @@
 
   <aside class="panel hidden" id="scenePanel">
     <div class="panel-head"><h3>Background</h3><button class="icon-btn close" data-close>✕</button></div>
+    <div id="sceneTabs" class="scene-tabs"></div>
     <div id="sceneList" class="scene-list"></div>
     <label class="field">Custom image URL
       <input id="customBg" placeholder="https://…/photo.jpg" />
@@ -168,6 +170,10 @@
     <label class="check"><input type="checkbox" id="setNotify" /> Desktop notifications</label>
     <label class="check"><input type="checkbox" id="setClock24" /> 24-hour clock</label>
     <label class="check"><input type="checkbox" id="setQuotes" /> Show quotes</label>
+    <label class="check"><input type="checkbox" id="setAffirm" /> Show a daily affirmation</label>
+    <label class="field">Theme text
+      <select id="setTheme"><option value="auto">Match background</option><option value="dark">Always light text</option><option value="light">Always dark text</option></select>
+    </label>
   </aside>
 
   <!-- PLAN ITEM MODAL -->
@@ -195,6 +201,7 @@
 
   <div class="toast hidden" id="toast"></div>
 
+  <script src="scenes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

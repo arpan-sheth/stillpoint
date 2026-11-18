@@ -10,7 +10,9 @@ A free, no-subscription focus dashboard with a built-in planner. No account, no 
 - Task list with session estimates; the session counter goes up for the task you have selected
 - Clock, greeting and a daily quote
 - Generated lo-fi music plus 7 ambient sounds (rain, ocean, wind, fireplace, café, white and brown noise) that you can mix
-- Background scenes, or your own image (URL or upload)
+- 40 original backgrounds: soft aura glows (hearts, butterflies, moons, flowers, stars, clouds and more), animated rainy windows and starry hills, illustrated hills and clouds, silk, and simple gradients. The text switches between light and dark to suit each one.
+- Use your own image instead (URL or upload)
+- Optional daily affirmation
 - Focus mode: the rest of the screen fades while the timer runs
 
 **Planner**
