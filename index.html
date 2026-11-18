@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stillpoint — Focus & Planner</title>
+  <meta name="description" content="A free, no-subscription focus dashboard with a Pomodoro timer, tasks, ambient sounds and a weekly planner." />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#1b1f2a" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="bg" class="bg"></div>
+  <div class="scrim"></div>
+
+  <header class="topbar">
+    <div class="brand">◐ Stillpoint</div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="focus" role="tab">Focus</button>
+      <button class="tab" data-view="planner" role="tab">Planner</button>
+      <button class="tab" data-view="stats" role="tab">Stats</button>
+    </nav>
+    <div class="top-actions">
+      <button class="icon-btn" id="soundsBtn" title="Ambient sounds">♫</button>
+      <button class="icon-btn" id="sceneBtn" title="Change background">▣</button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+      <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <!-- FOCUS VIEW -->
+  <main id="view-focus" class="view active">
+    <section class="hero">
+      <div class="greeting" id="greeting">Hello</div>
+      <div class="clock" id="clock">00:00</div>
+      <div class="date" id="dateLine"></div>
+    </section>
+
+    <section class="focus-grid">
+      <div class="card timer-card">
+        <div class="mode-switch">
+          <button class="mode active" data-mode="focus">Focus</button>
+          <button class="mode" data-mode="short">Short break</button>
+          <button class="mode" data-mode="long">Long break</button>
+        </div>
+        <div class="timer" id="timer">25:00</div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="current-task" id="currentTask">No task selected — pick one from your list</div>
+        <div class="timer-controls">
+          <button class="btn primary" id="startBtn">Start</button>
+          <button class="btn" id="resetBtn">Reset</button>
+          <button class="btn" id="skipBtn">Skip</button>
+        </div>
+        <div class="session-count" id="sessionCount">Session 1 · 0 done today</div>
+      </div>
+
+      <div class="card tasks-card">
+        <div class="card-head">
+          <h2>Tasks</h2>
+          <button class="link-btn" id="clearDoneBtn">Clear done</button>
+        </div>
+        <form id="taskForm" class="inline-form">
+          <input id="taskInput" placeholder="Add a task…" autocomplete="off" />
+          <input id="taskPomos" type="number" min="1" max="20" value="1" title="Estimated sessions" />
+          <button class="btn primary">Add</button>
+        </form>
+        <ul id="taskList" class="task-list"></ul>
+      </div>
+
+      <div class="card today-card">
+        <div class="card-head">
+          <h2>Today's plan</h2>
+          <button class="link-btn" data-goto="planner">Open planner →</button>
+        </div>
+        <ul id="todayList" class="plan-list"></ul>
+      </div>
+    </section>
+
+    <blockquote class="quote" id="quote"></blockquote>
+  </main>
+
+  <!-- PLANNER VIEW -->
+  <main id="view-planner" class="view">
+    <section class="card planner-card">
+      <div class="planner-head">
+        <div class="planner-nav">
+          <button class="btn" id="prevWeek">‹</button>
+          <button class="btn" id="todayWeek">Today</button>
+          <button class="btn" id="nextWeek">›</button>
+          <h2 id="weekLabel"></h2>
+        </div>
+        <div class="planner-toggle">
+          <button class="mode active" data-pview="week">Week</button>
+          <button class="mode" data-pview="day">Day</button>
+          <button class="btn primary" id="addPlanBtn">+ New item</button>
+        </div>
+      </div>
+      <div id="weekGrid" class="week-grid"></div>
+      <div id="dayView" class="day-view hidden"></div>
+    </section>
+
+    <section class="planner-side">
+      <div class="card">
+        <div class="card-head"><h2>Weekly goals</h2></div>
+        <form id="goalForm" class="inline-form">
+          <input id="goalInput" placeholder="Add a goal for this week…" autocomplete="off" />
+          <button class="btn primary">Add</button>
+        </form>
+        <ul id="goalList" class="task-list"></ul>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Notes</h2></div>
+        <textarea id="weekNotes" placeholder="Notes for this week…"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- STATS VIEW -->
+  <main id="view-stats" class="view">
+    <section class="card stats-card">
+      <h2>Your focus</h2>
+      <div class="stat-tiles">
+        <div class="tile"><span id="statToday">0</span><small>min today</small></div>
+        <div class="tile"><span id="statWeek">0</span><small>min this week</small></div>
+        <div class="tile"><span id="statSessions">0</span><small>sessions total</small></div>
+        <div class="tile"><span id="statStreak">0</span><small>day streak</small></div>
+      </div>
+      <h3>Last 14 days</h3>
+      <div id="chart" class="chart"></div>
+      <div class="data-actions">
+        <button class="btn" id="exportBtn">Export data</button>
+        <label class="btn">Import data<input type="file" id="importFile" accept="application/json" hidden /></label>
+      </div>
+    </section>
+  </main>
+
+  <!-- PANELS -->
+  <aside class="panel hidden" id="soundsPanel">
+    <div class="panel-head"><h3>Ambient sounds</h3><button class="icon-btn close" data-close>✕</button></div>
+    <div id="soundList"></div>
+    <p class="hint">All sounds are generated in your browser — no downloads.</p>
+  </aside>
+
+  <aside class="panel hidden" id="scenePanel">
+    <div class="panel-head"><h3>Background</h3><button class="icon-btn close" data-close>✕</button></div>
+    <div id="sceneList" class="scene-list"></div>
+    <label class="field">Custom image URL
+      <input id="customBg" placeholder="https://…/photo.jpg" />
+    </label>
+    <label class="field">Or upload an image
+      <input id="bgUpload" type="file" accept="image/*" />
+    </label>
+  </aside>
+
+  <aside class="panel hidden" id="settingsPanel">
+    <div class="panel-head"><h3>Settings</h3><button class="icon-btn close" data-close>✕</button></div>
+    <label class="field">Your name <input id="setName" placeholder="Optional" /></label>
+    <div class="row3">
+      <label class="field">Focus (min)<input id="setFocus" type="number" min="1" max="180" /></label>
+      <label class="field">Short (min)<input id="setShort" type="number" min="1" max="60" /></label>
+      <label class="field">Long (min)<input id="setLong" type="number" min="1" max="90" /></label>
+    </div>
+    <label class="field">Long break every <input id="setInterval" type="number" min="2" max="10" /> sessions</label>
+    <label class="check"><input type="checkbox" id="setAutoBreak" /> Auto-start breaks</label>
+    <label class="check"><input type="checkbox" id="setAutoFocus" /> Auto-start focus after breaks</label>
+    <label class="check"><input type="checkbox" id="setChime" /> Chime when a timer ends</label>
+    <label class="check"><input type="checkbox" id="setNotify" /> Desktop notifications</label>
+    <label class="check"><input type="checkbox" id="setClock24" /> 24-hour clock</label>
+    <label class="check"><input type="checkbox" id="setQuotes" /> Show quotes</label>
+  </aside>
+
+  <!-- PLAN ITEM MODAL -->
+  <div class="modal hidden" id="planModal">
+    <form class="modal-box" id="planForm">
+      <h3 id="planModalTitle">New item</h3>
+      <label class="field">Title <input id="planTitle" required /></label>
+      <div class="row3">
+        <label class="field">Date <input id="planDate" type="date" required /></label>
+        <label class="field">Start <input id="planStart" type="time" /></label>
+        <label class="field">End <input id="planEnd" type="time" /></label>
+      </div>
+      <label class="field">Notes <textarea id="planNotes" rows="3"></textarea></label>
+      <div class="field">Color
+        <div class="colors" id="planColors"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn danger" id="planDelete">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="planCancel">Cancel</button>
+        <button class="btn primary">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
