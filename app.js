@@ -167,7 +167,9 @@
   });
   $$("[data-close]").forEach((b) => b.addEventListener("click", () => b.closest(".panel").classList.add("hidden")));
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".panel") && !e.target.closest(".icon-btn")) $$(".panel").forEach((x) => x.classList.add("hidden"));
+    // composedPath() is captured at dispatch, so it still works when a click re-renders the element it hit
+    const inside = e.composedPath().some((el) => el.classList && (el.classList.contains("panel") || el.classList.contains("icon-btn")));
+    if (!inside) $$(".panel").forEach((x) => x.classList.add("hidden"));
   });
   $("#fullscreenBtn").addEventListener("click", toggleFullscreen);
   function toggleFullscreen() {
@@ -237,6 +239,7 @@
   }
 
   const SOUNDS = {
+    lofi: { label: "Lo-fi music", icon: "♪", build: buildLofi },
     rain: { label: "Rain", icon: "☂", build(ctx, out) {
       const src = ctx.createBufferSource(); src.buffer = noiseBuffer(ctx, "pink"); src.loop = true;
       const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 400;
@@ -292,6 +295,77 @@
       src.connect(out); src.start(); return [src];
     }},
   };
+  // Generative lo-fi beat: jazzy chords, bass, swung drums and vinyl crackle, scheduled ahead of time.
+  function buildLofi(ctx, out) {
+    const master = ctx.createBiquadFilter(); master.type = "lowpass"; master.frequency.value = 3200;
+    const comp = ctx.createDynamicsCompressor();
+    master.connect(comp).connect(out);
+    const noise = noiseBuffer(ctx, "white");
+    const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    // Dm9 – G13 – Cmaj9 – Am9 (MIDI notes)
+    const CHORDS = [
+      { bass: 38, notes: [53, 57, 60, 64] },
+      { bass: 43, notes: [53, 57, 59, 64] },
+      { bass: 36, notes: [52, 55, 59, 62] },
+      { bass: 33, notes: [55, 60, 64, 67] },
+    ];
+    const SCALE = [72, 74, 76, 79, 81, 84]; // C major pentatonic
+    const bpm = 72, beat = 60 / bpm, step = beat / 2; // 8th notes
+    let next = ctx.currentTime + 0.1, n = 0;
+
+    function keys(t, midi, dur, vol) {
+      const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = "triangle"; o2.type = "sine";
+      o.frequency.value = mtof(midi); o2.frequency.value = mtof(midi) * 1.003;
+      f.type = "lowpass"; f.frequency.value = 1400;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+      o.connect(f); o2.connect(f); f.connect(g).connect(master);
+      o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+    }
+    function bass(t, midi, dur) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = mtof(midi);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.32, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function kick(t) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+      g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(g).connect(master); o.start(t); o.stop(t + 0.4);
+    }
+    function hit(t, freq, type, dur, vol) {
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noise; f.type = type; f.frequency.value = freq;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      s.connect(f).connect(g).connect(master); s.start(t, Math.random() * 3); s.stop(t + dur + 0.02);
+    }
+    function schedule(t, i) {
+      const pos = i % 32, bar = Math.floor(i / 8) % 4, inBar = i % 8, chord = CHORDS[bar];
+      const swing = inBar % 2 ? step * 0.18 : 0, tt = t + swing;
+      if (inBar === 0) { chord.notes.forEach((m, k) => keys(t + k * 0.012, m, beat * 3.6, 0.07)); bass(t, chord.bass, beat * 1.8); }
+      if (inBar === 3 && Math.random() < 0.6) chord.notes.slice(1).forEach((m) => keys(tt, m, beat * 1.2, 0.045));
+      if (inBar === 4) bass(t, chord.bass + (Math.random() < 0.5 ? 7 : 0), beat * 1.5);
+      if (inBar === 0 || (inBar === 5 && Math.random() < 0.7)) kick(tt);
+      if (inBar === 2 || inBar === 6) hit(t, 1800, "bandpass", 0.18, 0.35);
+      hit(tt, 7000, "highpass", inBar % 2 ? 0.03 : 0.05, inBar % 2 ? 0.06 : 0.1);
+      if (pos >= 16 && Math.random() < 0.22) keys(tt, SCALE[Math.floor(Math.random() * SCALE.length)], beat * 1.4, 0.05);
+    }
+    const timerId = setInterval(() => {
+      while (next < ctx.currentTime + 0.2) { schedule(next, n++); next += step; }
+    }, 25);
+
+    // vinyl crackle bed
+    const len = ctx.sampleRate * 5, vb = ctx.createBuffer(1, len, ctx.sampleRate), d = vb.getChannelData(0);
+    for (let i = 0; i < len; i++) { d[i] = (Math.random() * 2 - 1) * 0.004; if (Math.random() < 0.0004) d[i] += (Math.random() * 2 - 1) * 0.5; }
+    const vinyl = ctx.createBufferSource(); vinyl.buffer = vb; vinyl.loop = true;
+    const vg = ctx.createGain(); vg.gain.value = 0.5; vinyl.connect(vg).connect(out); vinyl.start();
+
+    return [vinyl, { stop: () => clearInterval(timerId) }];
+  }
+
   const live = {};
   function soundState(k) { return (S.sounds[k] ||= { on: false, vol: 0.5 }); }
   function startSound(k) {
@@ -321,6 +395,10 @@
     const k = e.target.dataset.vol; if (!k) return;
     soundState(k).vol = +e.target.value;
     if (live[k]) live[k].gain.gain.setTargetAtTime(+e.target.value, audio().currentTime, 0.05);
+    else if (+e.target.value > 0) {
+      startSound(k); soundState(k).on = true;
+      $(`[data-snd="${k}"]`)?.classList.add("on");
+    }
     save();
   });
 

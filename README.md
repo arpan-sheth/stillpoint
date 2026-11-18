@@ -9,7 +9,7 @@ A free, no-subscription focus dashboard with a built-in planner. No account, no 
 - Optional auto-start, chime and desktop notifications
 - Task list with session estimates; the session counter goes up for the task you have selected
 - Clock, greeting and a daily quote
-- 7 ambient sounds made in the browser (rain, ocean, wind, fireplace, café, white and brown noise) that you can mix
+- Generated lo-fi music plus 7 ambient sounds (rain, ocean, wind, fireplace, café, white and brown noise) that you can mix
 - Background scenes, or your own image (URL or upload)
 - Focus mode: the rest of the screen fades while the timer runs
 
