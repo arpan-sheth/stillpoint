@@ -45,7 +45,16 @@ button, input, textarea { font: inherit; color: inherit; }
 
 .focus-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 16px; align-items: start; }
 @media (max-width: 1000px) { .focus-grid { grid-template-columns: 1fr 1fr; } .timer-card { grid-column: 1 / -1; } }
-@media (max-width: 640px) { .focus-grid { grid-template-columns: 1fr; } .view { padding: 8px 16px 40px; } }
+.focus-grid > *, .planner-side > *, #view-planner > * { min-width: 0; }
+@media (max-width: 640px) {
+  .focus-grid { grid-template-columns: 1fr; } .view { padding: 8px 16px 40px; }
+  /* phone header: brand + icons on one row, tabs full width below */
+  .topbar { padding: 12px 16px; row-gap: 10px; }
+  .tabs { order: 3; width: 100%; justify-content: space-between; }
+  .tab { flex: 1; }
+  .icon-btn { width: 36px; height: 36px; }
+  .mode { padding: 6px 10px; }
+}
 
 .timer-card { text-align: center; }
 .mode-switch, .planner-toggle { display: inline-flex; gap: 4px; background: rgba(var(--fg),0.08); padding: 4px; border-radius: 999px; flex-wrap: wrap; justify-content: center; }
@@ -150,7 +159,11 @@ input[type=date], input[type=time], select { color-scheme: dark; }
 
 /* Panels */
 .panel { position: fixed; top: 70px; right: 20px; width: 320px; max-width: calc(100vw - 32px); max-height: calc(100vh - 90px); overflow-y: auto; background: var(--glass-strong); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; backdrop-filter: blur(20px); z-index: 20; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-@media (max-width: 640px) { .panel { right: 16px; left: 16px; width: auto; } }
+@media (max-width: 640px) {
+  /* bottom sheet on phones so it never covers the nav */
+  .panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-width: none; max-height: 78vh; border-radius: 20px 20px 0 0; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+.upload-btn { width: 100%; margin-top: 2px; }
 .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .panel h3 { margin: 0; font-size: 1rem; }
 .icon-btn.close { width: 30px; height: 30px; font-size: 0.8rem; }
@@ -192,7 +205,9 @@ body.zen .topbar:hover, body.zen .tasks-card:hover, body.zen .today-card:hover {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 .scene-tabs { display: flex; gap: 4px; background: rgba(var(--fg),0.08); padding: 4px; border-radius: 999px; margin-bottom: 10px; flex-wrap: wrap; }
 .scene-tabs .mode { flex: 1; padding: 5px 8px; font-size: .8rem; }
-.scene-list { grid-template-columns: repeat(2, 1fr); max-height: 360px; overflow-y: auto; padding-right: 2px; }
+.scene-list { grid-template-columns: repeat(2, 1fr); max-height: 360px; overflow-y: auto; padding: 2px 2px 18px; margin-bottom: 4px;
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 28px), transparent); }
+@media (max-width: 640px) { .scene-list { max-height: 42vh; } }
 .scene { overflow: hidden; }
 .scene-art { position: absolute; inset: 0; }
 .scene span { z-index: 1; color: #fff; }

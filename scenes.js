@@ -188,7 +188,7 @@
           if (d.y - d.r > h) st.sliders[i] = st.mk(true);
         });
         // window frame with a soft inner shadow
-        const fw = Math.max(16, w * 0.022);
+        const fw = Math.max(4, w * 0.022);
         ctx.fillStyle = frame;
         ctx.fillRect(0, 0, w, fw); ctx.fillRect(0, h - fw * 1.8, w, fw * 1.8); ctx.fillRect(0, 0, fw, h); ctx.fillRect(w - fw, 0, fw, h);
         const sh = (x0, y0, x1, y1, rx, ry, rw, rh) => {
