@@ -174,7 +174,7 @@
     <label class="field">Theme text
       <select id="setTheme"><option value="auto">Match background</option><option value="dark">Always light text</option><option value="light">Always dark text</option></select>
     </label>
-    <p class="hint">Stillpoint v1.3</p>
+    <p class="hint">Stillpoint v1.4</p>
   </aside>
 
   <!-- PLAN ITEM MODAL -->
@@ -201,6 +201,13 @@
   </div>
 
   <div class="toast hidden" id="toast"></div>
+
+  <div class="promo hidden" id="promo" role="dialog" aria-labelledby="promoText">
+    <button class="promo-close" id="promoClose" aria-label="Close">✕</button>
+    <div class="promo-paw">🐾</div>
+    <p id="promoText">try the sister app</p>
+    <a class="btn primary promo-btn" id="promoBtn" href="https://tinyurl.com/pawgress" target="_blank" rel="noopener">go to pawgress</a>
+  </div>
 
   <script src="scenes.js"></script>
   <script src="app.js"></script>

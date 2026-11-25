@@ -796,6 +796,15 @@
     renderTasks(); renderToday(); renderSounds(); resetTimer();
   }
   boot();
+
+  // Sister-app popup, shown each time the app opens
+  const promo = $("#promo");
+  const closePromo = () => promo.classList.add("hidden");
+  setTimeout(() => promo.classList.remove("hidden"), 600);
+  $("#promoClose").addEventListener("click", closePromo);
+  $("#promoBtn").addEventListener("click", closePromo);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePromo(); });
+
   // Refresh "today" bits around midnight / periodically
   setInterval(() => { renderToday(); const nl = $(".now-line"); if (nl) { const n = new Date(); nl.style.top = `${((n.getHours() * 60 + n.getMinutes()) / 60) * 48}px`; } }, 60_000);
 
